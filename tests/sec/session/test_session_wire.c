@@ -22,7 +22,7 @@ static void test_data_before_handshake(void)
 
     world_listen(&w);
     raw_connect(&w, &p, RAW_DATA_FIRST);
-    harness_pump(&w, 300);
+    CHECK(harness_wait(&w, &w.resp.closes, 1));
     CHECK_EQ_INT(w.resp.closes, 1);
     CHECK_EQ_INT(w.resp.close_err, SESS_EPROTO);
     CHECK_EQ_INT(w.resp.est, 0);
@@ -40,11 +40,10 @@ static void test_handshake_after_established(void)
 
     world_listen(&w);
     raw_connect(&w, &p, RAW_HS);
-    harness_pump(&w, 300);
+    CHECK(harness_wait(&w, &w.resp.est, 1));
     CHECK(p.established);
-    CHECK_EQ_INT(w.resp.est, 1);
     raw_send_frame(&p, SESS_FRAME_HS, JUNK, sizeof(JUNK));
-    harness_pump(&w, 300);
+    CHECK(harness_wait(&w, &w.resp.closes, 1));
     CHECK_EQ_INT(w.resp.closes, 1);
     CHECK_EQ_INT(w.resp.close_err, SESS_EPROTO);
     harness_pump(&w, 100);
@@ -60,15 +59,13 @@ static void test_corrupted_byte(void)
 
     world_listen(&w);
     raw_connect(&w, &p, RAW_HS);
-    harness_pump(&w, 300);
+    CHECK(harness_wait(&w, &w.resp.est, 1));
     CHECK(p.established);
     CHECK_EQ_INT(raw_send_encrypted(&p, 0x20, PL, sizeof(PL), 0), 0);
-    harness_pump(&w, 200);
-    CHECK_EQ_INT(w.resp.msgs, 1);
+    CHECK(harness_wait(&w, &w.resp.msgs, 1));
     CHECK_EQ_INT(raw_send_encrypted(&p, 0x20, PL, sizeof(PL), 1), 0);
-    harness_pump(&w, 300);
+    CHECK(harness_wait(&w, &w.resp.closes, 1));
     CHECK_EQ_INT(w.resp.msgs, 1);
-    CHECK_EQ_INT(w.resp.closes, 1);
     CHECK_EQ_INT(w.resp.close_err, SESS_EDECRYPT);
     harness_pump(&w, 100);
     raw_free(&p);
@@ -84,10 +81,7 @@ static void test_handshake_timeout(void)
     world_listen(&w);
     raw_connect(&w, &p, RAW_SILENT);
     start = loop_now_ms(w.loop);
-    while (w.resp.closes == 0 && loop_now_ms(w.loop) < start + SESS_HS_TIMEOUT_MS + 2000u) {
-        loop_run_once(w.loop, 20);
-    }
-    CHECK_EQ_INT(w.resp.closes, 1);
+    CHECK(harness_wait_ms(&w, &w.resp.closes, 1, SESS_HS_TIMEOUT_MS + HARNESS_WAIT_MS));
     CHECK_EQ_INT(w.resp.close_err, SESS_ETIMEOUT);
     CHECK(loop_now_ms(w.loop) - start >= SESS_HS_TIMEOUT_MS);
     harness_pump(&w, 100);

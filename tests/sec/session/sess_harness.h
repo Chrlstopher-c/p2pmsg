@@ -164,6 +164,23 @@ static inline void harness_close_all(world_t *w)
     harness_pump(w, 100);
 }
 
+/* Pompe la boucle jusqu'à *v >= target ou plafond HARNESS_WAIT_MS (large, pour charge valgrind). */
+#define HARNESS_WAIT_MS 5000u
+static inline int harness_wait_ms(world_t *w, const int *v, int target, uint64_t ceiling_ms)
+{
+    uint64_t deadline = loop_now_ms(w->loop) + ceiling_ms;
+
+    while (*v < target && loop_now_ms(w->loop) < deadline) {
+        loop_run_once(w->loop, 5);
+    }
+    return *v >= target;
+}
+
+static inline int harness_wait(world_t *w, const int *v, int target)
+{
+    return harness_wait_ms(w, v, target, HARNESS_WAIT_MS);
+}
+
 static inline void harness_teardown(world_t *w)
 {
     if (w->ls) {
