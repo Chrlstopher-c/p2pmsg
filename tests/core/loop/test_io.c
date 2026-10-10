@@ -52,8 +52,11 @@ static void on_other_count(loop_t *l, int fd, uint32_t ev, void *ud)
     (void)l;
     (void)ev;
     (void)ud;
+    ssize_t n;
+
     g_other_calls++;
-    (void)read(fd, &c, 1);
+    n = read(fd, &c, 1);
+    CHECK_EQ_INT(n, 1);
 }
 
 static void make_pipe(int p[2])
