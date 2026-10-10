@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": { "major": 3, "minor": 20, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "asan",
+      "generator": "Unix Makefiles",
+      "displayName": "ASan + UBSan",
+      "binaryDir": "${sourceDir}/build/asan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "None",
+        "CMAKE_C_FLAGS": "-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
+    },
+    {
+      "name": "tsan",
+      "generator": "Unix Makefiles",
+      "displayName": "ThreadSanitizer",
+      "binaryDir": "${sourceDir}/build/tsan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "None",
+        "CMAKE_C_FLAGS": "-O1 -g -fsanitize=thread",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=thread"
+      }
+    },
+    {
+      "name": "release",
+      "generator": "Unix Makefiles",
+      "displayName": "Release (-O2)",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "None",
+        "CMAKE_C_FLAGS": "-O2 -DNDEBUG"
+      }
+    },
+    {
+      "name": "debug",
+      "generator": "Unix Makefiles",
+      "displayName": "Debug, sans sanitizer, tests sous valgrind",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "P2P_VALGRIND": "ON"
+      }
+    }
+  ]
+}

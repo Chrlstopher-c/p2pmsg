@@ -1,0 +1,48 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dépendances système
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential autoconf automake libtool pkg-config \
+            libsqlite3-dev libavahi-client-dev libgtk-4-dev valgrind bison flex
+
+      - name: Clone noise-c (commit figé)
+        run: |
+          git clone https://github.com/rweather/noise-c third_party/noise-c
+          git -C third_party/noise-c checkout cfe25410979a87391bb9ac8d4d4bef64e9f268c6
+
+      - name: Check complet
+        run: CHECK_NO_DOCKER=1 scripts/check.sh
+
+      - name: Package
+        run: scripts/package.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Publier la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<NOTES
+          Plateforme : Linux x86_64 uniquement. Windows prévu en v2.
+
+          Dépendances runtime : libgtk-4-1, libsqlite3-0, libavahi-client3.
+
+          Installation : \`tar -xzf p2pmsg-*-linux-x86_64.tar.gz\`, binaires dans \`bin/\`, documentation dans \`share/doc/p2pmsg\`.
+          Vérification : \`sha256sum -c SHA256SUMS\`.
+          NOTES
+          gh release create "$GITHUB_REF_NAME" \
+            --title "p2pmsg $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            dist/p2pmsg-*-linux-x86_64.tar.gz dist/SHA256SUMS

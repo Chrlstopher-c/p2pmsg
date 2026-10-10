@@ -1,0 +1,13 @@
+# Builds et artefacts
+build/
+logs/
+.p2pmsg.pid
+# Clone noise-c figé (re-cloné en CI, non vendored)
+third_party/noise-c/
+# Secrets et état local
+.env
+.env.local
+*.db
+*.db-wal
+*.db-shm
+dist/

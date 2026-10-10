@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dépendances système
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential autoconf automake libtool pkg-config \
+            libsqlite3-dev libavahi-client-dev libgtk-4-dev valgrind bison flex
+
+      - name: Clone noise-c (commit figé)
+        run: |
+          git clone https://github.com/rweather/noise-c third_party/noise-c
+          git -C third_party/noise-c checkout cfe25410979a87391bb9ac8d4d4bef64e9f268c6
+
+      - name: Check complet (asan, tsan, valgrind natif)
+        run: CHECK_NO_DOCKER=1 scripts/check.sh
+
+      - name: TODO/FIXME
+        run: scripts/grep-todo.sh

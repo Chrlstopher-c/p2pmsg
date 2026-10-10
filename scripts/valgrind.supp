@@ -1,0 +1,23 @@
+# Blocs "still reachable" uniquement, dont la pile traverse libdbus ou avahi-client/common.
+# Les fuites definitely/indirectly lost ne sont jamais supprimees.
+{
+   dbus_still_reachable
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libdbus-1.so*
+}
+{
+   avahi_client_still_reachable
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libavahi-client.so*
+}
+{
+   avahi_common_still_reachable
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libavahi-common.so*
+}
